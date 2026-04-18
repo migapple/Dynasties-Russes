@@ -1,0 +1,20 @@
+{
+  "appId": "com.michel.garlandat.dynastiesrusses",
+  "appName": "Dynasties Russes",
+  "webDir": "App/public",
+  "bundledWebRuntime": false,
+  "backgroundColor": "#0a0806",
+  "ios": {
+    "backgroundColor": "#0a0806",
+    "contentInset": "automatic",
+    "scrollEnabled": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    },
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}

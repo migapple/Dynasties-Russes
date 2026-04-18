@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Dynasties Russes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap"></noscript>
+<style>
+:root {
+  --ink: #0a0806;
+  --gold: #c9a84c;
+  --gold-light: #e8c97a;
+  --parchment: #f5ede0;
+  --parchment-dark: #e8dbc8;
+  --crimson: #8b1a1a;
+  --crimson-light: #c0392b;
+  --safe-top: env(safe-area-inset-top, 44px);
+  --safe-bottom: env(safe-area-inset-bottom, 34px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { background: var(--ink); color: var(--parchment); font-family: 'Cormorant Garamond','Georgia',serif; height:100dvh; overflow:hidden; }
+
+#app {
+  position: fixed; top:0; left:0; right:0; bottom:0;
+  display: flex; flex-direction: column;
+  padding-top: var(--safe-top);
+  background: var(--ink);
+}
+
+/* HEADER */
+#header {
+  background: linear-gradient(180deg,#1a0505 0%,#0f0303 100%);
+  border-bottom: 1.5px solid var(--crimson);
+  padding: 10px 14px 8px;
+  flex-shrink: 0;
+}
+#header-inner { display:flex; align-items:center; justify-content:space-between; }
+#header h1 { font-family:'IM Fell English','Georgia',serif; font-size:18px; color:var(--gold); text-align:center; flex:1; letter-spacing:.5px; }
+#header h1 span { display:block; font-size:10px; font-family:'Cormorant Garamond',serif; color:var(--parchment-dark); letter-spacing:2px; text-transform:uppercase; font-style:italic; margin-top:1px; }
+.hdr-icon { font-size:22px; cursor:pointer; }
+#lang-btn { background:none; border:1px solid var(--gold); border-radius:4px; color:var(--gold); font-family:'Cormorant Garamond',serif; font-size:12px; padding:3px 7px; cursor:pointer; letter-spacing:1px; }
+#settings-btn { background:none; border:none; color:var(--gold); font-size:20px; cursor:pointer; padding:2px 6px; }
+
+/* DYNASTY FILTER */
+#dynasty-filter {
+  display:flex; gap:6px; padding:8px 10px;
+  overflow-x:auto; flex-shrink:0;
+  background: #0d0505;
+  border-bottom: 1px solid rgba(139,26,26,0.4);
+  scrollbar-width:none;
+}
+#dynasty-filter::-webkit-scrollbar { display:none; }
+.dyn-pill {
+  flex-shrink:0; border:1px solid rgba(201,168,76,0.4);
+  background:rgba(201,168,76,0.06); color:var(--parchment-dark);
+  border-radius:20px; padding:5px 12px; font-size:12px;
+  font-family:'Cormorant Garamond',serif; cursor:pointer; white-space:nowrap;
+  transition: all .2s;
+}
+.dyn-pill.active { background:var(--crimson); border-color:var(--crimson-light); color:var(--parchment); }
+.dyn-pill:active { opacity:.7; }
+
+/* TABS */
+#tabs { display:flex; background:#0d0505; border-bottom:1px solid rgba(139,26,26,0.5); flex-shrink:0; }
+.tab { flex:1; padding:9px 4px; text-align:center; font-size:12px; font-family:'Cormorant Garamond',serif;
+  letter-spacing:.5px; color:rgba(245,237,224,0.5); cursor:pointer; border-bottom:2px solid transparent;
+  transition: all .2s; text-transform:uppercase; }
+.tab.active { color:var(--gold); border-bottom-color:var(--gold); }
+
+/* CONTENT */
+#content { flex:1; overflow:hidden; position:relative; }
+.tab-pane { position:absolute; inset:0; overflow-y:auto; display:none; -webkit-overflow-scrolling:touch; }
+.tab-pane.active { display:block; }
+.tab-pane::-webkit-scrollbar { display:none; }
+
+/* SOVEREIGN LIST */
+#list-pane { padding: 10px 10px calc(10px + var(--safe-bottom)); }
+.sovereign-card {
+  display:flex; align-items:center; gap:12px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(201,168,76,0.04) 100%);
+  border:1px solid rgba(201,168,76,0.15);
+  border-radius:8px; padding:10px 12px; margin-bottom:8px;
+  cursor:pointer; transition: all .2s; position:relative;
+}
+.sovereign-card:active { opacity:.7; transform:scale(.99); }
+.sovereign-card.crimson-border { border-left:3px solid var(--crimson); }
+.sovereign-card.gold-border { border-left:3px solid var(--gold); }
+.sovereign-portrait {
+  width:52px; height:52px; border-radius:50%;
+  background:rgba(201,168,76,0.1); border:1.5px solid rgba(201,168,76,0.3);
+  overflow:hidden; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+}
+.sovereign-portrait img { width:100%; height:100%; object-fit:cover; }
+.portrait-placeholder { font-size:22px; }
+.sovereign-info { flex:1; min-width:0; }
+.sovereign-name { font-family:'IM Fell English','Georgia',serif; font-size:15px; color:var(--parchment); line-height:1.2; }
+.sovereign-dates { font-size:11px; color:var(--gold); margin-top:2px; letter-spacing:.3px; }
+.sovereign-dynasty { font-size:10px; color:rgba(245,237,224,0.5); margin-top:2px; font-style:italic; }
+.sovereign-title-badge { font-size:10px; color:var(--crimson-light); font-weight:600; letter-spacing:.5px; }
+.card-chevron { color:rgba(201,168,76,0.4); font-size:16px; }
+
+/* DETAIL */
+#detail-pane { padding: 0 0 calc(20px + var(--safe-bottom)); }
+#detail-back { display:flex; align-items:center; gap:6px; padding:12px 14px; color:var(--gold); font-size:14px; cursor:pointer; border-bottom:1px solid rgba(139,26,26,0.3); }
+#detail-back:active { opacity:.6; }
+#detail-hero { background:linear-gradient(180deg,#1a0505 0%,var(--ink) 100%); padding:20px 16px; text-align:center; }
+#detail-portrait-wrap {
+  width:100px; height:100px; border-radius:50%; margin:0 auto 12px;
+  border:2px solid var(--gold); overflow:hidden;
+  background:rgba(201,168,76,0.08); display:flex; align-items:center; justify-content:center;
+}
+#detail-portrait-wrap img { width:100%; height:100%; object-fit:cover; }
+#detail-portrait-wrap .big-placeholder { font-size:44px; }
+#detail-name { font-family:'IM Fell English','Georgia',serif; font-size:22px; color:var(--gold); line-height:1.2; }
+#detail-cyrillic { font-size:14px; color:rgba(245,237,224,0.5); margin-top:4px; font-style:italic; }
+#detail-dates { font-size:13px; color:var(--parchment-dark); margin-top:6px; }
+#detail-dynasty-badge {
+  display:inline-block; margin-top:8px; padding:3px 12px;
+  border:1px solid var(--crimson); border-radius:20px;
+  font-size:11px; color:var(--crimson-light); letter-spacing:.5px; text-transform:uppercase;
+}
+#detail-body { padding:0 16px; }
+.detail-section { border-top:1px solid rgba(201,168,76,0.15); padding:12px 0; }
+.detail-section h3 { font-family:'IM Fell English','Georgia',serif; font-size:13px; color:var(--gold); letter-spacing:.5px; text-transform:uppercase; margin-bottom:8px; }
+.detail-section p { font-size:14px; color:var(--parchment-dark); line-height:1.65; }
+.detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.detail-fact { background:rgba(255,255,255,0.03); border:1px solid rgba(201,168,76,0.12); border-radius:6px; padding:8px 10px; }
+.detail-fact-label { font-size:10px; color:rgba(245,237,224,0.4); letter-spacing:.5px; text-transform:uppercase; }
+.detail-fact-value { font-size:13px; color:var(--parchment); margin-top:2px; }
+
+/* QUIZ */
+#quiz-pane { padding:0; }
+#quiz-start { text-align:center; padding:30px 20px calc(40px + var(--safe-bottom)); }
+#quiz-start h2 { font-family:'IM Fell English','Georgia',serif; font-size:24px; color:var(--gold); margin-bottom:10px; }
+#quiz-start p { font-size:14px; color:var(--parchment-dark); margin-bottom:24px; line-height:1.6; }
+.btn-start {
+  background:linear-gradient(135deg,var(--crimson),#5a0f0f);
+  border:1px solid var(--crimson-light); color:var(--parchment);
+  font-family:'IM Fell English','Georgia',serif; font-size:16px;
+  padding:12px 32px; border-radius:6px; cursor:pointer;
+  letter-spacing:.5px; transition: opacity .2s;
+}
+.btn-start:active { opacity:.7; }
+#quiz-question-wrap { display:none; }
+.quiz-progress { display:flex; justify-content:space-between; font-size:12px; color:rgba(245,237,224,0.5); margin-bottom:12px; }
+.quiz-progress-bar { height:3px; background:rgba(255,255,255,0.08); border-radius:2px; margin-bottom:16px; overflow:hidden; }
+.quiz-progress-fill { height:100%; background:var(--crimson); border-radius:2px; transition:width .4s; }
+#quiz-q-text { font-family:'IM Fell English','Georgia',serif; font-size:18px; color:var(--parchment); line-height:1.45; margin-bottom:20px; min-height:60px; }
+.quiz-portrait-wrap { width:80px; height:80px; border-radius:50%; border:2px solid var(--gold); overflow:hidden; margin:0 auto 16px; background:rgba(201,168,76,0.08); display:flex; align-items:center; justify-content:center; }
+.quiz-portrait-wrap img { width:100%; height:100%; object-fit:cover; }
+.quiz-portrait-wrap .qp-placeholder { font-size:32px; }
+.quiz-choices { display:flex; flex-direction:column; gap:8px; }
+.quiz-choice {
+  background:rgba(255,255,255,0.03); border:1.5px solid rgba(201,168,76,0.2);
+  border-radius:8px; padding:12px 14px; font-size:14px;
+  color:var(--parchment); cursor:pointer; font-family:'Cormorant Garamond',serif;
+  transition: all .15s; text-align:left;
+}
+.quiz-choice:active { opacity:.7; }
+.quiz-choice.correct { background:rgba(40,120,40,0.25); border-color:#4caf50; color:#a5d6a7; }
+.quiz-choice.wrong { background:rgba(139,26,26,0.3); border-color:var(--crimson-light); color:#ef9a9a; }
+.quiz-choice.reveal { background:rgba(40,120,40,0.15); border-color:#4caf50; }
+.quiz-choice.disabled { pointer-events:none; }
+#quiz-feedback { margin-top:12px; padding:10px 14px; border-radius:6px; font-size:13px; line-height:1.5; display:none; }
+#quiz-feedback.ok { background:rgba(40,120,40,0.15); border:1px solid #4caf50; color:#a5d6a7; }
+#quiz-feedback.ko { background:rgba(139,26,26,0.2); border:1px solid var(--crimson-light); color:#ef9a9a; }
+#quiz-next { margin-top:14px; width:100%; background:var(--crimson); border:none; color:var(--parchment); font-family:'IM Fell English','Georgia',serif; font-size:15px; padding:12px; border-radius:6px; cursor:pointer; display:none; letter-spacing:.5px; }
+#quiz-next:active { opacity:.7; }
+#quiz-result { display:none; text-align:center; padding:30px 20px; }
+#quiz-result h2 { font-family:'IM Fell English','Georgia',serif; font-size:26px; color:var(--gold); margin-bottom:10px; }
+#quiz-score-display { font-size:48px; font-family:'IM Fell English','Georgia',serif; color:var(--crimson-light); margin:10px 0; }
+#quiz-result p { font-size:14px; color:var(--parchment-dark); margin-bottom:24px; }
+
+/* SETTINGS OVERLAY */
+#settings-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:200;
+  display:none; align-items:flex-end; justify-content:center;
+}
+#settings-overlay.open { display:flex; }
+#settings-panel {
+  background:linear-gradient(180deg,#1a0505,#0f0303);
+  border-top:2px solid var(--crimson);
+  border-radius:16px 16px 0 0;
+  padding:20px 20px calc(20px + var(--safe-bottom));
+  width:100%; max-width:420px;
+  position:relative;
+  max-height:80vh;
+  display:flex; flex-direction:column;
+}
+#other-apps-list {
+  overflow-y:auto; -webkit-overflow-scrolling:touch;
+  flex:1;
+}
+#other-apps-list::-webkit-scrollbar { display:none; }
+#settings-panel h2 { font-family:'IM Fell English','Georgia',serif; color:var(--gold); font-size:18px; text-align:center; margin-bottom:16px; padding-top:8px; }
+.settings-close { position:absolute; top:16px; right:16px; background:none; border:none; color:var(--gold); font-size:22px; cursor:pointer; z-index:1; }
+.other-app {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 10px; border:1px solid rgba(201,168,76,0.15);
+  border-radius:6px; margin-bottom:7px; background:rgba(201,168,76,0.04); cursor:pointer;
+}
+.other-app:active { opacity:.6; }
+.other-app span { font-size:22px; }
+.other-app-info { flex:1; }
+.other-app-name { font-size:13px; color:var(--parchment); font-family:'IM Fell English','Georgia',serif; }
+.other-app-sub { font-size:10px; color:rgba(245,237,224,0.45); }
+.other-app-badge { font-size:10px; color:var(--gold); border:1px solid rgba(201,168,76,0.3); border-radius:3px; padding:1px 5px; }
+.settings-copyright { text-align:center; font-size:10px; color:rgba(245,237,224,0.3); margin-top:14px; font-style:italic; }
+
+/* DETAIL overlay */
+#detail-overlay {
+  position:absolute; inset:0;
+  background:var(--ink);
+  overflow-y:auto; -webkit-overflow-scrolling:touch;
+  display:none; z-index:10;
+}
+#detail-overlay.open { display:block; }
+#detail-overlay::-webkit-scrollbar { display:none; }
+
+/* img loading */
+.portrait-loading { animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:.8} }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <div id="header">
+    <div id="header-inner">
+      <span class="hdr-icon">🦅</span>
+      <h1 id="app-title">Dynasties Russes<span id="app-subtitle">De Riourik à Nicolas II</span></h1>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button id="lang-btn" onclick="toggleLang()">🇬🇧</button>
+        <button id="settings-btn" onclick="openSettings()">⚙️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DYNASTY FILTER -->
+  <div id="dynasty-filter"></div>
+
+  <!-- TABS -->
+  <div id="tabs">
+    <div class="tab active" id="tab-list" onclick="switchTab('list')" data-key="tabList">Souverains</div>
+    <div class="tab" id="tab-quiz" onclick="switchTab('quiz')" data-key="tabQuiz">Quiz</div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+    <div class="tab-pane active" id="list-pane"></div>
+    <div class="tab-pane" id="quiz-pane"></div>
+    <!-- Detail overlay inside content -->
+    <div id="detail-overlay">
+      <div id="detail-pane"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS OVERLAY -->
+<div id="settings-overlay" onclick="closeSettingsOutside(event)">
+  <div id="settings-panel">
+    <button class="settings-close" onclick="closeSettings()">✕</button>
+    <h2 id="settings-title">Mes Applications</h2>
+    <div id="other-apps-list"></div>
+    <div class="settings-copyright">© Michel Garlandat</div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────
+const MGA_CONFIG = {
+  appName: { fr:'Dynasties Russes', en:'Russian Dynasties' },
+  appCourante: 'com.michel.garlandat.dynastiesrusses',
+  bundleId: 'com.michel.garlandat.dynastiesrusses'
+};
+
+// ─────────────────────────────────────────────
+// TRADUCTIONS
+// ─────────────────────────────────────────────
+const T = {
+  tabList:       { fr:'Souverains', en:'Sovereigns' },
+  tabQuiz:       { fr:'Quiz',       en:'Quiz' },
+  settingsTitle: { fr:'Mes Applications', en:'My Applications' },
+  appSubtitle:   { fr:'De Riourik à Nicolas II', en:'From Rurik to Nicholas II' },
+  filterAll:     { fr:'Tous', en:'All' },
+  reign:         { fr:'Règne', en:'Reign' },
+  born:          { fr:'Né(e)', en:'Born' },
+  died:          { fr:'Décédé(e)', en:'Died' },
+  title:         { fr:'Titre', en:'Title' },
+  capital:       { fr:'Capitale', en:'Capital' },
+  dynasty_label: { fr:'Dynastie', en:'Dynasty' },
+  bio:           { fr:'Biographie', en:'Biography' },
+  facts:         { fr:'Faits marquants', en:'Key Facts' },
+  backBtn:       { fr:'← Retour', en:'← Back' },
+  quizTitle:     { fr:'Quiz Dynasties Russes', en:'Russian Dynasties Quiz' },
+  quizIntro:     { fr:'Testez vos connaissances sur les tsars et empereurs de Russie.', en:'Test your knowledge of the tsars and emperors of Russia.' },
+  startQuiz:     { fr:'Commencer le Quiz', en:'Start Quiz' },
+  nextQ:         { fr:'Question suivante', en:'Next question' },
+  seeResult:     { fr:'Voir le résultat', en:'See result' },
+  resultTitle:   { fr:'Résultat final', en:'Final Score' },
+  resultMsg:     { fr:'Votre score', en:'Your score' },
+  retryQuiz:     { fr:'Rejouer', en:'Play again' },
+  correct:       { fr:'Bonne réponse !', en:'Correct!' },
+  wrong:         { fr:'Mauvaise réponse.', en:'Wrong answer.' },
+  qProgress:     { fr:'Question', en:'Question' },
+};
+
+// ─────────────────────────────────────────────
+// DONNÉES : SOUVERAINS
+// ─────────────────────────────────────────────
+const DYNASTIES = [
+  { id:'riourik', fr:'Riourikides', en:'Rurikids', color:'#8b1a1a', emoji:'⚔️' },
+  { id:'godounov', fr:'Godounov', en:'Godunov', color:'#5a3000', emoji:'👑' },
+  { id:'romanov', fr:'Romanov', en:'Romanov', color:'#1a3a6b', emoji:'🦅' },
+  { id:'holstein', fr:'Holstein-Romanov', en:'Holstein-Romanov', color:'#2a5a2a', emoji:'🏰' },
+];
+
+const SOVEREIGNS = [
+  // ── RIOURIKIDES ──
+  { id:'riourik', dynasty:'riourik', title:{ fr:'Prince de Novgorod', en:'Prince of Novgorod' },
+    name:{ fr:'Riourik', en:'Rurik' }, cyrillic:'Рюрик',
+    reign:{ start:862, end:879 }, born:820, died:879,
+    capital:{ fr:'Novgorod', en:'Novgorod' },
+    wiki:'Riourik',
+    bio:{ fr:'Fondateur légendaire de la Rus\' de Kiev, Riourik est un chef varègue (viking) invité par les Slaves à gouverner Novgorod vers 862. Il est l\'ancêtre éponyme de la dynastie des Riourikides qui régnera sur la Russie pendant plus de 700 ans.', en:'Legendary founder of Kievan Rus\', Rurik was a Varangian (Viking) chief invited by Slavic tribes to rule Novgorod around 862. He is the eponymous ancestor of the Rurikid dynasty, which would rule Russia for over 700 years.' },
+    facts:{ fr:'Fondateur de la Rus\' | Origine varègue (viking) | Ancêtre de toute la noblesse russe', en:'Founder of the Rus\' | Varangian (Viking) origin | Ancestor of all Russian nobility' }
+  },
+  { id:'oleg', dynasty:'riourik', title:{ fr:'Grand-Prince de Kiev', en:'Grand Prince of Kyiv' },
+    name:{ fr:'Oleg le Prophète', en:'Oleg the Wise' }, cyrillic:'Олег',
+    reign:{ start:882, end:912 }, born:845, died:912,
+    capital:{ fr:'Kiev', en:'Kyiv' }, wiki:'Oleg_de_Novgorod',
+    bio:{ fr:'Régent puis successeur de Riourik, Oleg conquiert Kiev en 882 et en fait la capitale de la Rus\'. Il mène une expédition légendaire contre Constantinople en 907 et impose un traité commercial avantageux à Byzance.', en:'Regent and successor of Rurik, Oleg captured Kyiv in 882 and made it the capital of the Rus\'. He led a legendary campaign against Constantinople in 907, securing a favorable trade treaty with Byzantium.' },
+    facts:{ fr:'Unification de la Rus\' de Kiev | Expédition sur Constantinople 907 | Surnommé "le Prophète"', en:'Unification of Kievan Rus\' | Campaign against Constantinople 907 | Called "the Prophet"' }
+  },
+  { id:'vladimir', dynasty:'riourik', title:{ fr:'Grand-Prince de Kiev', en:'Grand Prince of Kyiv' },
+    name:{ fr:'Vladimir Ier le Grand', en:'Vladimir I the Great' }, cyrillic:'Владимир I',
+    reign:{ start:980, end:1015 }, born:958, died:1015,
+    capital:{ fr:'Kiev', en:'Kyiv' }, wiki:'Vladimir_Ier_de_Kiev',
+    bio:{ fr:'Vladimir Ier est le prince qui christianise la Rus\' en 988 en adoptant le christianisme orthodoxe byzantin. Ce baptême collectif marque l\'une des décisions les plus importantes de l\'histoire russe. Il est canonisé par l\'Église orthodoxe.', en:'Vladimir I is the prince who Christianized the Rus\' in 988 by adopting Byzantine Orthodox Christianity. This collective baptism marks one of the most important decisions in Russian history. He was canonized by the Orthodox Church.' },
+    facts:{ fr:'Christianisation de la Rus\' en 988 | Canonisé saint | Baptême de masse dans le Dniepr', en:'Christianization of the Rus\' in 988 | Canonized as saint | Mass baptism in the Dnieper' }
+  },
+  { id:'iaroslav', dynasty:'riourik', title:{ fr:'Grand-Prince de Kiev', en:'Grand Prince of Kyiv' },
+    name:{ fr:'Iaroslav le Sage', en:'Yaroslav the Wise' }, cyrillic:'Ярослав Мудрый',
+    reign:{ start:1019, end:1054 }, born:978, died:1054,
+    capital:{ fr:'Kiev', en:'Kyiv' }, wiki:'Iaroslav_le_Sage',
+    bio:{ fr:'Considéré comme l\'apogée de la Rus\' de Kiev, Iaroslav le Sage promulgue le premier code de lois russe (Rousskaïa Pravda), construit la cathédrale Sainte-Sophie de Kiev et fait de sa cour un centre culturel européen par ses alliances matrimoniales.', en:'Considered the apogee of Kievan Rus\', Yaroslav the Wise promulgated the first Russian law code (Russkaya Pravda), built Saint Sophia Cathedral in Kyiv, and made his court a European cultural center through matrimonial alliances.' },
+    facts:{ fr:'Premier code de lois : Rousskaïa Pravda | Sainte-Sophie de Kiev | Alliances avec toutes les cours d\'Europe', en:'First law code: Russkaya Pravda | Saint Sophia Cathedral | Alliances with all European courts' }
+  },
+  { id:'alexandre_nevski', dynasty:'riourik', title:{ fr:'Grand-Prince de Vladimir', en:'Grand Prince of Vladimir' },
+    name:{ fr:'Alexandre Nevski', en:'Alexander Nevsky' }, cyrillic:'Александр Невский',
+    reign:{ start:1252, end:1263 }, born:1220, died:1263,
+    capital:{ fr:'Vladimir', en:'Vladimir' }, wiki:'Alexandre_Nevski',
+    bio:{ fr:'Héros national russe, Alexandre Nevski bat les chevaliers teutoniques sur le lac Peïpous (1242) et les Suédois sur la Neva (1240). Il choisit la soumission aux Mongols plutôt que la résistance, préservant ainsi la civilisation russe orthodoxe.', en:'Russian national hero, Alexander Nevsky defeated the Teutonic Knights on Lake Peipus (1242) and the Swedes on the Neva (1240). He chose submission to the Mongols over resistance, thus preserving Russian Orthodox civilization.' },
+    facts:{ fr:'Bataille de la Neva 1240 | Bataille du lac Peïpous 1242 | Canonisé saint orthodoxe', en:'Battle of the Neva 1240 | Battle on the Ice 1242 | Canonized Orthodox saint' }
+  },
+  { id:'ivan3', dynasty:'riourik', title:{ fr:'Grand-Prince de Moscou', en:'Grand Prince of Moscow' },
+    name:{ fr:'Ivan III le Grand', en:'Ivan III the Great' }, cyrillic:'Иван III',
+    reign:{ start:1462, end:1505 }, born:1440, died:1505,
+    capital:{ fr:'Moscou', en:'Moscow' }, wiki:'Ivan_III_de_Russie',
+    bio:{ fr:'Ivan III unifie les principautés russes sous l\'autorité de Moscou, met fin à la suzeraineté mongole (1480) et se proclame "Souverain de toute la Russie". Il épouse Sophie Paléologue, nièce du dernier empereur byzantin, et adopte l\'aigle bicéphale comme emblème.', en:'Ivan III unified Russian principalities under Moscow\'s authority, ended Mongol suzerainty (1480), and proclaimed himself "Sovereign of all Russia". He married Sophia Palaiologina, niece of the last Byzantine emperor, and adopted the double-headed eagle as emblem.' },
+    facts:{ fr:'Fin du joug mongol 1480 | Aigle bicéphale adopté | Unification des principautés russes', en:'End of Mongol yoke 1480 | Double-headed eagle adopted | Unification of Russian principalities' }
+  },
+  { id:'ivan_terrible', dynasty:'riourik', title:{ fr:'Tsar de Russie', en:'Tsar of Russia' },
+    name:{ fr:'Ivan IV le Terrible', en:'Ivan IV the Terrible' }, cyrillic:'Иван Грозный',
+    reign:{ start:1547, end:1584 }, born:1530, died:1584,
+    capital:{ fr:'Moscou', en:'Moscow' }, wiki:'Ivan_le_Terrible',
+    bio:{ fr:'Premier souverain à prendre le titre officiel de Tsar, Ivan le Terrible est à la fois réformateur habile et tyran sanguinaire. Il crée l\'oprichnina (police politique), conquiert les khanats de Kazan et Astrakhan, mais tue son propre fils dans un accès de rage.', en:'First ruler to officially bear the title of Tsar, Ivan the Terrible was both a skilled reformer and a bloody tyrant. He created the oprichnina (political police), conquered the khanates of Kazan and Astrakhan, but killed his own son in a fit of rage.' },
+    facts:{ fr:'Premier Tsar officiel de Russie | Conquête de Kazan 1552 | Fondation de l\'oprichnina 1565', en:'First official Tsar of Russia | Conquest of Kazan 1552 | Founded the oprichnina 1565' }
+  },
+  { id:'feodor1', dynasty:'riourik', title:{ fr:'Tsar de Russie', en:'Tsar of Russia' },
+    name:{ fr:'Fédor Ier', en:'Feodor I' }, cyrillic:'Фёдор I',
+    reign:{ start:1584, end:1598 }, born:1557, died:1598,
+    capital:{ fr:'Moscou', en:'Moscow' }, wiki:'Fédor_Ier',
+    bio:{ fr:'Fils faible et pieux d\'Ivan le Terrible, Fédor Ier confie le pouvoir réel à son beau-frère Boris Godounov. Son règne voit la fondation du patriarcat de Moscou (1589). Sa mort sans héritier mâle clôt la lignée des Riourikides et ouvre le Temps des Troubles.', en:'Weak and pious son of Ivan the Terrible, Feodor I entrusted real power to his brother-in-law Boris Godunov. His reign saw the founding of the Moscow Patriarchate (1589). His death without a male heir closed the Rurikid line and opened the Time of Troubles.' },
+    facts:{ fr:'Dernier Riourikide | Patriarcat de Moscou fondé 1589 | Pouvoir réel: Boris Godounov', en:'Last Rurikid Tsar | Moscow Patriarchate founded 1589 | Real power: Boris Godunov' }
+  },
+
+  // ── GODOUNOV ──
+  { id:'boris', dynasty:'godounov', title:{ fr:'Tsar de Russie', en:'Tsar of Russia' },
+    name:{ fr:'Boris Godounov', en:'Boris Godunov' }, cyrillic:'Борис Годунов',
+    reign:{ start:1598, end:1605 }, born:1551, died:1605,
+    capital:{ fr:'Moscou', en:'Moscow' }, wiki:'Boris_Godounov',
+    bio:{ fr:'Beau-frère de Fédor Ier et véritable maître de la Russie depuis 1584, Boris Godounov est élu tsar par le Zemski Sobor en 1598. Son règne est marqué par une grande famine (1601-1603) et l\'apparition du Faux Dmitri. Il est rendu célèbre par l\'opéra de Moussorgski.', en:'Brother-in-law of Feodor I and real master of Russia since 1584, Boris Godunov was elected tsar by the Zemsky Sobor in 1598. His reign was marked by a great famine (1601-1603) and the appearance of the False Dmitry. He is immortalized in Mussorgsky\'s opera.' },
+    facts:{ fr:'Élu par le Zemski Sobor | Grande famine 1601-1603 | Opéra de Moussorgski 1869', en:'Elected by Zemsky Sobor | Great famine 1601-1603 | Mussorgsky\'s opera 1869' }
+  },
+
+  // ── ROMANOV ──
+  { id:'mikhail1', dynasty:'romanov', title:{ fr:'Tsar de Russie', en:'Tsar of Russia' },
+    name:{ fr:'Michel Ier', en:'Michael I' }, cyrillic:'Михаил I',
+    reign:{ start:1613, end:1645 }, born:1596, died:1645,
+    capital:{ fr:'Moscou', en:'Moscow' }, wiki:'Michel_Ier_de_Russie',
+    bio:{ fr:'Élu tsar à 16 ans par le Zemski Sobor en 1613, Michel Ier fonde la dynastie des Romanov qui régnera 304 ans. Son élection met fin au Temps des Troubles. Son père, le patriarche Philarète, exerce de facto le pouvoir jusqu\'en 1633.', en:'Elected tsar at age 16 by the Zemsky Sobor in 1613, Michael I founded the Romanov dynasty that would reign for 304 years. His election ended the Time of Troubles. His father, Patriarch Filaret, exercised de facto power until 1633.' },
+    facts:{ fr:'Fondateur des Romanov | Élu à 16 ans, 1613 | Fin du Temps des Troubles', en:'Founder of the Romanovs | Elected at age 16, 1613 | End of the Time of Troubles' }
+  },
+  { id:'alexis', dynasty:'romanov', title:{ fr:'Tsar de Russie', en:'Tsar of Russia' },
+    name:{ fr:'Alexis Ier', en:'Alexis I' }, cyrillic:'Алексей I',
+    reign:{ start:1645, end:1676 }, born:1629, died:1676,
+    capital:{ fr:'Moscou', en:'Moscow' }, wiki:'Alexis_Ier_(tsar_de_Russie)',
+    bio:{ fr:'Surnommé "le Très Doux", Alexis Ier est le père de Pierre le Grand. Son règne voit la réunification de l\'Ukraine orientale avec la Russie (traité de Pereïaslav, 1654), le grand schisme de l\'Église orthodoxe russe et l\'adoption d\'un nouveau code de lois.', en:'Nicknamed "the Most Quiet", Alexis I was the father of Peter the Great. His reign saw the reunification of eastern Ukraine with Russia (Treaty of Pereyaslav, 1654), the great schism of the Russian Orthodox Church, and the adoption of a new law code.' },
+    facts:{ fr:'Père de Pierre le Grand | Traité de Pereïaslav 1654 | Grand schisme orthodoxe', en:'Father of Peter the Great | Treaty of Pereyaslav 1654 | Great Orthodox schism' }
+  },
+  { id:'pierre1', dynasty:'romanov', title:{ fr:'Tsar puis Empereur de Russie', en:'Tsar then Emperor of Russia' },
+    name:{ fr:'Pierre Ier le Grand', en:'Peter I the Great' }, cyrillic:'Пётр I Великий',
+    reign:{ start:1682, end:1725 }, born:1672, died:1725,
+    capital:{ fr:'Saint-Pétersbourg', en:'Saint Petersburg' }, wiki:'Pierre_Ier_de_Russie',
+    bio:{ fr:'Pierre le Grand modernise radicalement la Russie à l\'occidentale : il crée la marine, réforme l\'armée, fonde Saint-Pétersbourg (1703) qu\'il fait nouvelle capitale. En 1721, il prend le titre d\'Empereur. Sa victoire sur Charles XII de Suède à Poltava (1709) fait de la Russie une grande puissance européenne.', en:'Peter the Great radically modernized Russia along Western lines: he created the navy, reformed the army, founded Saint Petersburg (1703) as the new capital. In 1721, he took the title of Emperor. His victory over Charles XII of Sweden at Poltava (1709) made Russia a major European power.' },
+    facts:{ fr:'Fondation de Saint-Pétersbourg 1703 | Victoire de Poltava 1709 | Premier Empereur de Russie 1721', en:'Founded Saint Petersburg 1703 | Victory at Poltava 1709 | First Emperor of Russia 1721' }
+  },
+  { id:'catherine1', dynasty:'romanov', title:{ fr:'Impératrice de Russie', en:'Empress of Russia' },
+    name:{ fr:'Catherine Ire', en:'Catherine I' }, cyrillic:'Екатерина I',
+    reign:{ start:1725, end:1727 }, born:1684, died:1727,
+    capital:{ fr:'Saint-Pétersbourg', en:'Saint Petersburg' }, wiki:'Catherine_Ire_de_Russie',
+    bio:{ fr:'Épouse de Pierre le Grand, Catherine Ire est d\'origine lituanienne modeste. Elle est la première femme à régner sur la Russie. Son règne de deux ans est dominé par le prince Menchikov. Elle fonde l\'Académie des sciences de Saint-Pétersbourg, voulue par Pierre le Grand.', en:'Wife of Peter the Great, Catherine I was of humble Lithuanian origin. She was the first woman to rule Russia. Her two-year reign was dominated by Prince Menshikov. She founded the Saint Petersburg Academy of Sciences, intended by Peter the Great.' },
+    facts:{ fr:'Première femme impératrice | Origine lituanienne modeste | Académie des sciences fondée', en:'First female empress | Humble Lithuanian origin | Academy of Sciences founded' }
+  },
+  { id:'anna', dynasty:'romanov', title:{ fr:'Impératrice de Russie', en:'Empress of Russia' },
+    name:{ fr:'Anna Ivanovna', en:'Anna Ivanovna' }, cyrillic:'Анна Иоанновна',
+    reign:{ start:1730, end:1740 }, born:1693, died:1740,
+    capital:{ fr:'Saint-Pétersbourg', en:'Saint Petersburg' }, wiki:'Anna_Ivanovna',
+    bio:{ fr:'Nièce de Pierre le Grand, Anna Ivanovna règne avec l\'aide de favoris allemands, notamment Biron. Son règne est marqué par la "Bironovchtchina" (domination allemande), des dépenses fastueuses et la terreur secrète. Elle signe un traité avec l\'Empire ottoman.', en:'Niece of Peter the Great, Anna Ivanovna ruled with the help of German favorites, particularly Biron. Her reign was marked by "Bironovshchina" (German domination), lavish spending, and secret terror. She signed a treaty with the Ottoman Empire.' },
+    facts:{ fr:'Nièce de Pierre le Grand | Domination germanique "Bironovchtchina" | Cour fastueuse', en:'Niece of Peter the Great | German domination "Bironovshchina" | Lavish court' }
+  },
+  { id:'elizabeth', dynasty:'romanov', title:{ fr:'Impératrice de Russie', en:'Empress of Russia' },
+    name:{ fr:'Élisabeth Ire', en:'Elizabeth I' }, cyrillic:'Елизавета I',
+    reign:{ start:1741, end:1762 }, born:1709, died:1762,
+    capital:{ fr:'Saint-Pétersbourg', en:'Saint Petersburg' }, wiki:'Élisabeth_Ire_de_Russie',
+    bio:{ fr:'Fille de Pierre le Grand, Élisabeth prend le pouvoir par un coup de palais en 1741. Son règne brillant voit la fondation de l\'Université de Moscou (1755), la construction du palais d\'Hiver et la participation victorieuse à la guerre de Sept Ans. Dernière Romanov de souche russe.', en:'Daughter of Peter the Great, Elizabeth seized power in a palace coup in 1741. Her brilliant reign saw the founding of Moscow University (1755), the construction of the Winter Palace, and victorious participation in the Seven Years\' War. Last Romanov of Russian blood.' },
+    facts:{ fr:'Fondation Université de Moscou 1755 | Palais d\'Hiver construit | Guerre de Sept Ans', en:'Founded Moscow University 1755 | Winter Palace built | Seven Years\' War' }
+  },
+
+  // ── HOLSTEIN-ROMANOV ──
+  { id:'pierre3', dynasty:'holstein', title:{ fr:'Empereur de Russie', en:'Emperor of Russia' },
+    name:{ fr:'Pierre III', en:'Peter III' }, cyrillic:'Пётр III',
+    reign:{ start:1762, end:1762 }, born:1728, died:1762,
+    capital:{ fr:'Saint-Pétersbourg', en:'Saint Petersburg' }, wiki:'Pierre_III_de_Russie',
+    bio:{ fr:'Petit-fils de Pierre le Grand, Pierre III règne seulement 6 mois avant d\'être renversé par sa femme Catherine. Admirateur de Frédéric II de Prusse, il signe une paix séparée avec la Prusse au moment où la Russie allait gagner la guerre de Sept Ans. Il est assassiné peu après.', en:'Grandson of Peter the Great, Peter III ruled only 6 months before being overthrown by his wife Catherine. An admirer of Frederick II of Prussia, he signed a separate peace with Prussia just as Russia was about to win the Seven Years\' War. He was murdered shortly after.' },
+    facts:{ fr:'Règne de 6 mois | Renversé par Catherine II | Admirateur de Frédéric II', en:'Reigned only 6 months | Overthrown by Catherine II | Admirer of Frederick II' }
+  },
+  { id:'catherine2', dynasty:'holstein', title:{ fr:'Impératrice de Russie', en:'Empress of Russia' },
+    name:{ fr:'Catherine II la Grande', en:'Catherine II the Great' }, cyrillic:'Екатерина II Великая',
+    reign:{ start:1762, end:1796 }, born:1729, died:1796,
+    capital:{ fr:'Saint-Pétersbourg', en:'Saint Petersburg' }, wiki:'Catherine_II_de_Russie',
+    bio:{ fr:'Née Sophie d\'Anhalt-Zerbst, Catherine II est la plus grande impératrice russe. Elle agrandit considérablement l\'empire (Pologne, Crimée), développe les arts et les lettres (Ermitage), correspond avec Voltaire et les philosophes des Lumières. Elle est l\'une des souveraines les plus éclairées de son siècle.', en:'Born Sophie of Anhalt-Zerbst, Catherine II was Russia\'s greatest empress. She greatly expanded the empire (Poland, Crimea), developed arts and letters (the Hermitage), and corresponded with Voltaire and Enlightenment philosophers. She was one of the most enlightened rulers of her century.' },
+    facts:{ fr:'Née princesse allemande | Fondation de l\'Ermitage | Partage de la Pologne', en:'Born German princess | Founded the Hermitage | Partition of Poland' }
+  },
+  { id:'paul1', dynasty:'holstein', title:{ fr:'Empereur de Russie', en:'Emperor of Russia' },
+    name:{ fr:'Paul Ier', en:'Paul I' }, cyrillic:'Павел I',
+    reign:{ start:1796, end:1801 }, born:1754, died:1801,
+    capital:{ fr:'Saint-Pétersbourg', en:'Saint Petersburg' }, wiki:'Paul_Ier_de_Russie',
+    bio:{ fr:'Fils de Catherine II dont il fut écarté du pouvoir toute sa vie, Paul Ier tente de renverser les politiques de sa mère. Imprévisible et autoritaire, il est assassiné lors d\'un complot de palais. Son fils Alexandre est impliqué, du moins en connaissance du complot.', en:'Son of Catherine II from whose power he was kept throughout his life, Paul I attempted to reverse his mother\'s policies. Unpredictable and authoritarian, he was assassinated in a palace conspiracy. His son Alexander was at least aware of the plot.' },
+    facts:{ fr:'Fils écarté de Catherine II | Assassiné par des nobles | Réformes anti-Catherine', en:'Son kept from power by Catherine II | Murdered by nobles | Anti-Catherine reforms' }
+  },
+  { id:'alexandre1', dynasty:'holstein', title:{ fr:'Empereur de Russie', en:'Emperor of Russia' },
+    name:{ fr:'Alexandre Ier', en:'Alexander I' }, cyrillic:'Александр I',
+    reign:{ start:1801, end:1825 }, born:1777, died:1825,
+    capital:{ fr:'Saint-Pétersbourg', en:'Saint Petersburg' }, wiki:'Alexandre_Ier_de_Russie',
+    bio:{ fr:'Alexandre Ier bat Napoléon lors de la campagne de Russie (1812) et entre triomphalement dans Paris en 1814. Il fonde la Sainte-Alliance avec la Prusse et l\'Autriche. Surnommé "le Sphinx du Nord", il oscille entre libéralisme et conservatisme.', en:'Alexander I defeated Napoleon during the Russian campaign (1812) and entered Paris triumphantly in 1814. He founded the Holy Alliance with Prussia and Austria. Nicknamed "the Sphinx of the North", he oscillated between liberalism and conservatism.' },
+    facts:{ fr:'Vainqueur de Napoléon 1812 | Entrée dans Paris 1814 | Fondation de la Sainte-Alliance', en:'Victor over Napoleon 1812 | Entered Paris 1814 | Founded the Holy Alliance' }
+  },
+  { id:'nicolas1', dynasty:'holstein', title:{ fr:'Empereur de Russie', en:'Emperor of Russia' },
+    name:{ fr:'Nicolas Ier', en:'Nicholas I' }, cyrillic:'Николай I',
+    reign:{ start:1825, end:1855 }, born:1796, died:1855,
+    capital:{ fr:'Saint-Pétersbourg', en:'Saint Petersburg' }, wiki:'Nicolas_Ier_de_Russie',
+    bio:{ fr:'Nicolas Ier est le tsar le plus autocratique du XIXe siècle. Il réprime le soulèvement décabriste dès son avènement (1825), écrase les révolutions polonaise et hongroise. Son règne se termine en défaite lors de la guerre de Crimée. Surnommé "le Gendarme de l\'Europe".', en:'Nicholas I was the most autocratic tsar of the 19th century. He suppressed the Decembrist uprising at his accession (1825), crushed the Polish and Hungarian revolutions. His reign ended in defeat in the Crimean War. Nicknamed "the Gendarme of Europe".' },
+    facts:{ fr:'Répression des Décabristes 1825 | Gendarme de l\'Europe | Guerre de Crimée 1853-56', en:'Suppressed Decembrists 1825 | Gendarme of Europe | Crimean War 1853-56' }
+  },
+  { id:'alexandre2', dynasty:'holstein', title:{ fr:'Empereur de Russie', en:'Emperor of Russia' },
+    name:{ fr:'Alexandre II le Libérateur', en:'Alexander II the Liberator' }, cyrillic:'Александр II',
+    reign:{ start:1855, end:1881 }, born:1818, died:1881,
+    capital:{ fr:'Saint-Pétersbourg', en:'Saint Petersburg' }, wiki:'Alexandre_II_de_Russie',
+    bio:{ fr:'Alexandre II abolit le servage en 1861, l\'une des réformes sociales les plus importantes de l\'histoire russe. Il vend l\'Alaska aux États-Unis (1867), réforme la justice et crée les zemstvos. Il est assassiné par des nihilistes le 1er mars 1881, malgré plusieurs tentatives manquées.', en:'Alexander II abolished serfdom in 1861, one of the most important social reforms in Russian history. He sold Alaska to the United States (1867), reformed the judiciary and created zemstvos. He was assassinated by nihilists on March 1, 1881, despite several failed attempts.' },
+    facts:{ fr:'Abolition du servage 1861 | Vente de l\'Alaska 1867 | Assassiné par des nihilistes', en:'Abolished serfdom 1861 | Sold Alaska 1867 | Assassinated by nihilists' }
+  },
+  { id:'alexandre3', dynasty:'holstein', title:{ fr:'Empereur de Russie', en:'Emperor of Russia' },
+    name:{ fr:'Alexandre III', en:'Alexander III' }, cyrillic:'Александр III',
+    reign:{ start:1881, end:1894 }, born:1845, died:1894,
+    capital:{ fr:'Saint-Pétersbourg', en:'Saint Petersburg' }, wiki:'Alexandre_III_de_Russie',
+    bio:{ fr:'Réagissant à l\'assassinat de son père, Alexandre III est un tsar réactionnaire qui renforce l\'autocratie et russifie les minorités. Il construit le Transsibérien, conclut l\'alliance franco-russe (1892) et maintient la paix en Europe pendant tout son règne.', en:'Reacting to his father\'s assassination, Alexander III was a reactionary tsar who reinforced autocracy and Russified minorities. He built the Trans-Siberian Railway, concluded the Franco-Russian Alliance (1892), and maintained peace in Europe throughout his reign.' },
+    facts:{ fr:'Construction du Transsibérien | Alliance franco-russe 1892 | Russification des minorités', en:'Built Trans-Siberian Railway | Franco-Russian Alliance 1892 | Russification of minorities' }
+  },
+  { id:'nicolas2', dynasty:'holstein', title:{ fr:'Empereur de Russie', en:'Emperor of Russia' },
+    name:{ fr:'Nicolas II', en:'Nicholas II' }, cyrillic:'Николай II',
+    reign:{ start:1894, end:1917 }, born:1868, died:1918,
+    capital:{ fr:'Saint-Pétersbourg', en:'Saint Petersburg' }, wiki:'Nicolas_II_de_Russie',
+    bio:{ fr:'Dernier tsar de Russie, Nicolas II est dépassé par les événements. La révolution de 1905, l\'influence de Raspoutine, les défaites de la Première Guerre mondiale précipitent la révolution de Février 1917. Il abdique le 2 mars 1917. Lui et toute sa famille sont fusillés à Iekaterinbourg le 17 juillet 1918.', en:'Last tsar of Russia, Nicholas II was overwhelmed by events. The 1905 revolution, Rasputin\'s influence, and WWI defeats precipitated the February 1917 revolution. He abdicated on March 2, 1917. He and his entire family were shot in Yekaterinburg on July 17, 1918.' },
+    facts:{ fr:'Dernier tsar | Abdication 2 mars 1917 | Fusillé avec sa famille en 1918', en:'Last tsar | Abdicated March 2, 1917 | Shot with his family in 1918' }
+  },
+];
+
+// ─────────────────────────────────────────────
+// OTHER APPS (settings)
+// ─────────────────────────────────────────────
+const OTHER_APPS = [
+  { name:'Rois de France',              sub:{ fr:'44 monarques',            en:'44 monarchs' },           icon:'👑', id:'id6761323546' },
+  { name:'Présidents de la République', sub:{ fr:'25 présidents',           en:'25 presidents' },         icon:'🇫🇷', id:'id6761424444' },
+  { name:'Académie française',          sub:{ fr:'40 Immortels',            en:'40 Immortals' },          icon:'📚', id:'id6761334922' },
+  { name:'Théâtres Paris',              sub:{ fr:'39 théâtres',             en:'39 theatres' },           icon:'🎭', id:'id6760929391' },
+  { name:'Scènes Paris',                sub:{ fr:'23 salles de concert',    en:'23 concert halls' },      icon:'🎶', id:'id6761293938' },
+  { name:'Musées de Paris',             sub:{ fr:'37 musées',               en:'37 museums' },            icon:'🖼️', id:'id6760890465' },
+  { name:'Cimetières Paris',            sub:{ fr:'47 personnages célèbres', en:'47 famous figures' },     icon:'⚜️', id:'id6760751055' },
+  { name:'MesRestaurants',              sub:{ fr:'Mes adresses favorites',  en:'My favourite spots' },    icon:'🍽️', id:'id6760617965' },
+  { name:'Frigo Manager',               sub:{ fr:'Gestion du réfrigérateur',en:'Fridge manager' },        icon:'🧊', id:'id6759219383' },
+  { name:'Cave Manager',                sub:{ fr:'Gérez votre cave à vin',  en:'Manage your wine cellar'},icon:'🍷', id:'id6760126279' },
+  { name:'MediSafe-Pharmacie',          sub:{ fr:'Scanner vos médicaments', en:'Scan your medicines' },   icon:'💊', id:'id6761271324' },
+].filter(a => a.id !== MGA_CONFIG.appCourante);
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let lang = 'fr';
+let activeDynasty = 'all';
+let currentTab = 'list';
+
+// QUIZ
+let quizQuestions = [];
+let quizIndex = 0;
+let quizScore = 0;
+let quizAnswered = false;
+const QUIZ_COUNT = 10;
+
+// IMAGE CACHE
+const IMG_CACHE_PREFIX = 'dru_img_';
+const IMG_CACHE_TTL = 7 * 24 * 3600 * 1000;
+
+function t(key) {
+  return (T[key] && T[key][lang]) || key;
+}
+
+// ─────────────────────────────────────────────
+// LANGUAGE
+// ─────────────────────────────────────────────
+function toggleLang() {
+  lang = lang === 'fr' ? 'en' : 'fr';
+  document.getElementById('lang-btn').textContent = lang === 'fr' ? '🇬🇧' : '🇫🇷';
+  updateUI();
+}
+
+function updateUI() {
+  document.getElementById('app-subtitle').textContent = t('appSubtitle');
+  document.getElementById('settings-title').textContent = t('settingsTitle');
+  document.querySelectorAll('[data-key]').forEach(el => {
+    const k = el.dataset.key;
+    if (T[k]) el.textContent = t(k);
+  });
+  renderDynastyFilter();
+  renderList();
+  if (currentTab === 'quiz') renderQuizStart();
+}
+
+// ─────────────────────────────────────────────
+// DYNASTY FILTER
+// ─────────────────────────────────────────────
+function renderDynastyFilter() {
+  const el = document.getElementById('dynasty-filter');
+  let html = `<div class="dyn-pill ${activeDynasty==='all'?'active':''}" onclick="setDynasty('all')">${t('filterAll')}</div>`;
+  DYNASTIES.forEach(d => {
+    html += `<div class="dyn-pill ${activeDynasty===d.id?'active':''}" onclick="setDynasty('${d.id}')">${d.emoji} ${d[lang]}</div>`;
+  });
+  el.innerHTML = html;
+}
+
+function setDynasty(id) {
+  activeDynasty = id;
+  renderDynastyFilter();
+  renderList();
+}
+
+// ─────────────────────────────────────────────
+// LIST
+// ─────────────────────────────────────────────
+function renderList() {
+  const filtered = activeDynasty === 'all'
+    ? SOVEREIGNS
+    : SOVEREIGNS.filter(s => s.dynasty === activeDynasty);
+
+  const el = document.getElementById('list-pane');
+  let html = '';
+  let lastDyn = null;
+  filtered.forEach(s => {
+    if (s.dynasty !== lastDyn) {
+      const dyn = DYNASTIES.find(d => d.id === s.dynasty);
+      if (dyn) {
+        html += `<div style="padding:12px 4px 6px;font-family:'IM Fell English',serif;font-size:12px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;opacity:.7">${dyn.emoji} ${dyn[lang]}</div>`;
+      }
+      lastDyn = s.dynasty;
+    }
+    const borderClass = s.dynasty === 'riourik' || s.dynasty === 'godounov' ? 'crimson-border' : 'gold-border';
+    const reignStr = s.reign.start + ' – ' + (s.reign.end === s.reign.start ? s.reign.end : s.reign.end);
+    html += `<div class="sovereign-card ${borderClass}" onclick="openDetail('${s.id}')">
+      <div class="sovereign-portrait portrait-loading" id="thumb-${s.id}">
+        <span class="portrait-placeholder">👑</span>
+      </div>
+      <div class="sovereign-info">
+        <div class="sovereign-name">${s.name[lang]}</div>
+        <div class="sovereign-dates">${reignStr}</div>
+        <div class="sovereign-dynasty">${s.title[lang]}</div>
+      </div>
+      <div class="card-chevron">›</div>
+    </div>`;
+  });
+  el.innerHTML = html;
+  // Load images
+  filtered.forEach(s => loadPortrait(s, `thumb-${s.id}`, 52));
+}
+
+// ─────────────────────────────────────────────
+// WIKIPEDIA IMAGE LOADER
+// ─────────────────────────────────────────────
+function loadPortrait(s, containerId, size) {
+  if (!s.wiki) return;
+  const cacheKey = IMG_CACHE_PREFIX + s.wiki;
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      const { url, ts } = JSON.parse(cached);
+      if (Date.now() - ts < IMG_CACHE_TTL) {
+        setPortraitImg(containerId, url, size);
+        return;
+      }
+    }
+  } catch(e){}
+
+  fetch(`https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(s.wiki)}`)
+    .then(r => r.json())
+    .then(data => {
+      const url = data?.thumbnail?.source || data?.originalimage?.source;
+      if (url) {
+        try { localStorage.setItem(cacheKey, JSON.stringify({ url, ts: Date.now() })); } catch(e){}
+        setPortraitImg(containerId, url, size);
+      }
+    })
+    .catch(() => {});
+}
+
+function setPortraitImg(containerId, url, size) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.classList.remove('portrait-loading');
+  el.innerHTML = `<img src="${url}" alt="" style="width:${size}px;height:${size}px;object-fit:cover;" onerror="this.parentNode.innerHTML='<span class=\\'portrait-placeholder\\'>👑</span>'">`;
+}
+
+// ─────────────────────────────────────────────
+// DETAIL
+// ─────────────────────────────────────────────
+function openDetail(id) {
+  const s = SOVEREIGNS.find(x => x.id === id);
+  if (!s) return;
+  const dyn = DYNASTIES.find(d => d.id === s.dynasty);
+  const reignStr = s.reign.start + ' – ' + s.reign.end;
+
+  let html = `
+    <div id="detail-back" onclick="closeDetail()">← ${lang==='fr'?'Retour':'Back'}</div>
+    <div id="detail-hero">
+      <div id="detail-portrait-wrap" id="dp-${id}">
+        <span class="big-placeholder">👑</span>
+      </div>
+      <div id="detail-name">${s.name[lang]}</div>
+      <div id="detail-cyrillic">${s.cyrillic}</div>
+      <div id="detail-dates">${lang==='fr'?'Règne':'Reign'} : ${reignStr}</div>
+      <div id="detail-dynasty-badge">${dyn ? dyn[lang] : ''}</div>
+    </div>
+    <div id="detail-body">
+      <div class="detail-section">
+        <h3>${lang==='fr'?'Faits marquants':'Key Facts'}</h3>
+        <div class="detail-grid">`;
+
+  const factsArr = s.facts[lang].split('|').map(f => f.trim());
+  factsArr.forEach(f => {
+    html += `<div class="detail-fact"><div class="detail-fact-value">${f}</div></div>`;
+  });
+  html += `</div></div>
+      <div class="detail-section">
+        <div class="detail-grid">
+          <div class="detail-fact"><div class="detail-fact-label">${lang==='fr'?'Né(e)':'Born'}</div><div class="detail-fact-value">${s.born}</div></div>
+          <div class="detail-fact"><div class="detail-fact-label">${lang==='fr'?'Décédé(e)':'Died'}</div><div class="detail-fact-value">${s.died}</div></div>
+          <div class="detail-fact"><div class="detail-fact-label">${lang==='fr'?'Capitale':'Capital'}</div><div class="detail-fact-value">${s.capital[lang]}</div></div>
+          <div class="detail-fact"><div class="detail-fact-label">${lang==='fr'?'Titre':'Title'}</div><div class="detail-fact-value">${s.title[lang]}</div></div>
+        </div>
+      </div>
+      <div class="detail-section">
+        <h3>${lang==='fr'?'Biographie':'Biography'}</h3>
+        <p>${s.bio[lang]}</p>
+      </div>
+    </div>`;
+
+  const overlay = document.getElementById('detail-overlay');
+  document.getElementById('detail-pane').innerHTML = html;
+  overlay.scrollTop = 0;
+  overlay.classList.add('open');
+
+  // Load large portrait
+  setTimeout(() => {
+    const wrap = document.getElementById('detail-portrait-wrap');
+    if (!wrap || !s.wiki) return;
+    const cacheKey = IMG_CACHE_PREFIX + s.wiki;
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const { url, ts } = JSON.parse(cached);
+        if (Date.now() - ts < IMG_CACHE_TTL) {
+          wrap.innerHTML = `<img src="${url}" alt="" style="width:100px;height:100px;object-fit:cover;" onerror="this.parentNode.innerHTML='<span class=\\'big-placeholder\\'>👑</span>'">`;
+          return;
+        }
+      }
+    } catch(e){}
+    fetch(`https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(s.wiki)}`)
+      .then(r => r.json())
+      .then(data => {
+        const url = data?.thumbnail?.source || data?.originalimage?.source;
+        if (url && wrap) {
+          try { localStorage.setItem(cacheKey, JSON.stringify({ url, ts: Date.now() })); } catch(e){}
+          wrap.innerHTML = `<img src="${url}" alt="" style="width:100px;height:100px;object-fit:cover;" onerror="this.parentNode.innerHTML='<span class=\\'big-placeholder\\'>👑</span>'">`;
+        }
+      }).catch(()=>{});
+  }, 50);
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('open');
+}
+
+// ─────────────────────────────────────────────
+// TABS
+// ─────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  closeDetail();
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById(tab + '-pane').classList.add('active');
+  if (tab === 'quiz') renderQuizStart();
+}
+
+// ─────────────────────────────────────────────
+// QUIZ ENGINE
+// ─────────────────────────────────────────────
+function renderQuizStart() {
+  document.getElementById('quiz-pane').innerHTML = `
+    <div id="quiz-start" style="text-align:center;padding:40px 20px;min-height:100dvh;display:flex;flex-direction:column;justify-content:center;align-items:center;box-sizing:border-box;padding-bottom:calc(80px + var(--safe-bottom))">
+      <div style="font-size:48px;margin-bottom:12px">🦅</div>
+      <h2>${t('quizTitle')}</h2>
+      <p style="margin:10px 0 28px">${t('quizIntro')}</p>
+      <button class="btn-start" onclick="startQuiz()">${t('startQuiz')}</button>
+    </div>`;
+}
+
+function startQuiz() {
+  const pool = [...SOVEREIGNS].sort(() => Math.random() - .5).slice(0, QUIZ_COUNT);
+  quizQuestions = pool.map(s => buildQuestion(s));
+  quizIndex = 0;
+  quizScore = 0;
+  const quitLabel = lang === 'fr' ? 'Quitter' : 'Quit';
+  document.getElementById('quiz-pane').style.overflow = 'hidden';
+  document.getElementById('quiz-pane').style.display = 'flex';
+  document.getElementById('quiz-pane').style.flexDirection = 'column';
+  document.getElementById('quiz-pane').innerHTML = `
+    <div style="flex-shrink:0;background:var(--ink);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(139,26,26,0.3)">
+      <button onclick="quitQuiz()" style="background:none;border:1px solid rgba(245,237,224,0.25);border-radius:4px;color:var(--parchment-dark);font-family:'Cormorant Garamond',serif;font-size:14px;cursor:pointer;padding:5px 12px;">✕ ${quitLabel}</button>
+      <span id="qp-label" style="font-size:12px;color:rgba(245,237,224,0.5)">${t('qProgress')} 1 / ${QUIZ_COUNT}</span>
+      <span id="qp-score" style="font-size:12px;color:var(--gold)">0 / ${QUIZ_COUNT}</span>
+    </div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+      <div id="quiz-question-wrap" style="display:block;padding:14px 14px calc(40px + var(--safe-bottom))">
+        <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="qp-fill" style="width:0%"></div></div>
+        <div id="quiz-q-portrait-wrap"></div>
+        <div id="quiz-q-text"></div>
+        <div class="quiz-choices" id="quiz-choices"></div>
+        <div id="quiz-feedback"></div>
+        <button id="quiz-next" onclick="nextQuestion()"></button>
+      </div>
+      <div id="quiz-result"></div>
+    </div>`;
+  showQuestion();
+}
+
+function buildQuestion(s) {
+  const types = ['name_from_portrait', 'reign_dates', 'dynasty', 'capital', 'title'];
+  const type = types[Math.floor(Math.random() * types.length)];
+  let question, correct, choices;
+
+  if (type === 'name_from_portrait') {
+    question = lang === 'fr' ? 'Quel est ce souverain ?' : 'Who is this sovereign?';
+    correct = s.name[lang];
+    const others = SOVEREIGNS.filter(x => x.id !== s.id).sort(() => Math.random()-.5).slice(0,3).map(x => x.name[lang]);
+    choices = shuffle([correct, ...others]);
+  } else if (type === 'reign_dates') {
+    question = lang === 'fr'
+      ? `Quand ${s.name[lang]} a-t-il/elle régné ?`
+      : `When did ${s.name[lang]} reign?`;
+    correct = `${s.reign.start} – ${s.reign.end}`;
+    const others = SOVEREIGNS.filter(x => x.id !== s.id).sort(() => Math.random()-.5).slice(0,3)
+      .map(x => `${x.reign.start} – ${x.reign.end}`);
+    choices = shuffle([correct, ...others]);
+  } else if (type === 'dynasty') {
+    const dyn = DYNASTIES.find(d => d.id === s.dynasty);
+    question = lang === 'fr'
+      ? `À quelle dynastie appartient ${s.name[lang]} ?`
+      : `Which dynasty does ${s.name[lang]} belong to?`;
+    correct = dyn ? dyn[lang] : s.dynasty;
+    const others = DYNASTIES.filter(d => d.id !== s.dynasty).sort(() => Math.random()-.5).slice(0,3).map(d => d[lang]);
+    choices = shuffle([correct, ...others]);
+  } else if (type === 'capital') {
+    question = lang === 'fr'
+      ? `Quelle était la capitale sous ${s.name[lang]} ?`
+      : `What was the capital under ${s.name[lang]}?`;
+    correct = s.capital[lang];
+    const caps = [...new Set(SOVEREIGNS.filter(x => x.id !== s.id).map(x => x.capital[lang]))].sort(() => Math.random()-.5).slice(0,3);
+    choices = shuffle([correct, ...caps]);
+  } else {
+    question = lang === 'fr'
+      ? `Quel était le titre de ${s.name[lang]} ?`
+      : `What was the title of ${s.name[lang]}?`;
+    correct = s.title[lang];
+    const others = SOVEREIGNS.filter(x => x.id !== s.id).sort(() => Math.random()-.5).slice(0,3).map(x => x.title[lang]);
+    choices = shuffle([correct, ...others]);
+  }
+
+  return { sovereign: s, question, correct, choices, type };
+}
+
+function shuffle(arr) { return arr.sort(() => Math.random() - .5); }
+
+function quitQuiz() {
+  const pane = document.getElementById('quiz-pane');
+  pane.style.overflow = '';
+  pane.style.display = '';
+  pane.style.flexDirection = '';
+  renderQuizStart();
+}
+
+function showQuestion() {
+  quizAnswered = false;
+  const q = quizQuestions[quizIndex];
+  document.getElementById('qp-label').textContent = `${t('qProgress')} ${quizIndex+1} / ${QUIZ_COUNT}`;
+  document.getElementById('qp-score').textContent = `Score : ${quizScore}`;
+  document.getElementById('qp-fill').style.width = ((quizIndex / QUIZ_COUNT) * 100) + '%';
+
+  // Portrait for visual question types
+  const portWrap = document.getElementById('quiz-q-portrait-wrap');
+  if (q.type === 'name_from_portrait' || q.type === 'reign_dates') {
+    portWrap.innerHTML = `<div class="quiz-portrait-wrap" id="qpw"><span class="qp-placeholder">👑</span></div>`;
+    loadPortrait(q.sovereign, 'qpw', 80);
+  } else {
+    portWrap.innerHTML = '';
+  }
+
+  document.getElementById('quiz-q-text').textContent = q.question;
+  document.getElementById('quiz-feedback').style.display = 'none';
+  document.getElementById('quiz-next').style.display = 'none';
+
+  const choicesEl = document.getElementById('quiz-choices');
+  choicesEl.innerHTML = q.choices.map((c, i) =>
+    `<button class="quiz-choice" onclick="answerQuiz(${i})" data-idx="${i}">${c}</button>`
+  ).join('');
+}
+
+function answerQuiz(idx) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  const q = quizQuestions[quizIndex];
+  const chosen = q.choices[idx];
+  const correct = chosen === q.correct;
+  if (correct) quizScore++;
+
+  document.getElementById('qp-score').textContent = `Score : ${quizScore}`;
+
+  document.querySelectorAll('.quiz-choice').forEach((btn, i) => {
+    btn.classList.add('disabled');
+    if (q.choices[i] === q.correct) btn.classList.add('reveal');
+  });
+  document.querySelectorAll('.quiz-choice')[idx].classList.add(correct ? 'correct' : 'wrong');
+
+  const fb = document.getElementById('quiz-feedback');
+  fb.style.display = 'block';
+  fb.className = 'quiz-feedback ' + (correct ? 'ok' : 'ko');
+  const factsArr = q.sovereign.facts[lang].split('|');
+  fb.textContent = (correct ? t('correct') : t('wrong')) + ' — ' + factsArr[0].trim();
+
+  const nextBtn = document.getElementById('quiz-next');
+  nextBtn.style.display = 'block';
+  nextBtn.textContent = quizIndex < QUIZ_COUNT - 1 ? t('nextQ') : t('seeResult');
+}
+
+function nextQuestion() {
+  quizIndex++;
+  if (quizIndex >= QUIZ_COUNT) {
+    showResult();
+  } else {
+    showQuestion();
+  }
+}
+
+function showResult() {
+  document.getElementById('quiz-question-wrap').style.display = 'none';
+  const pct = Math.round((quizScore / QUIZ_COUNT) * 100);
+  let medal = quizScore >= 9 ? '🥇' : quizScore >= 7 ? '🥈' : quizScore >= 5 ? '🥉' : '📜';
+  document.getElementById('quiz-result').style.display = 'block';
+  document.getElementById('quiz-result').innerHTML = `
+    <div style="font-size:48px;margin-bottom:8px">${medal}</div>
+    <h2>${t('resultTitle')}</h2>
+    <div id="quiz-score-display">${quizScore} / ${QUIZ_COUNT}</div>
+    <p>${pct}%</p>
+    <button class="btn-start" onclick="startQuiz()">${t('retryQuiz')}</button>`;
+}
+
+// ─────────────────────────────────────────────
+// SETTINGS
+// ─────────────────────────────────────────────
+function openSettings() {
+  const list = document.getElementById('other-apps-list');
+  list.innerHTML = OTHER_APPS.map(a =>
+    `<div class="other-app" onclick="openApp('${a.id}')">
+      <span>${a.icon}</span>
+      <div class="other-app-info">
+        <div class="other-app-name">${a.name}</div>
+        <div class="other-app-sub">${a.sub[lang]}</div>
+      </div>
+      <span class="other-app-badge">App Store</span>
+    </div>`
+  ).join('');
+  document.getElementById('settings-overlay').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settings-overlay').classList.remove('open');
+}
+
+function closeSettingsOutside(e) {
+  if (e.target === document.getElementById('settings-overlay')) closeSettings();
+}
+
+function openApp(appId) {
+  window.open(`https://apps.apple.com/app/${appId}`, '_system');
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+function init() {
+  renderDynastyFilter();
+  renderList();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
